@@ -15,8 +15,8 @@ class NetworkManager {
     private var cancellables = Set<AnyCancellable>()
     private let url = "https://dummyjson.com/users"
     
-    func getData<T: Codable>(type: T.Type) -> Future<[T], Error> {
-        return Future<[T], Error> { [weak self] promise in
+    func getData<T: Codable>(type: T.Type) -> Future<T, Error> {
+        return Future<T, Error> { [weak self] promise in
             guard let self = self, let url = URL(string: self.url) else {
                 return promise(.failure(NetworkError.invalidURL))
             }
@@ -29,7 +29,7 @@ class NetworkManager {
                     
                     return data
                 }
-                .decode(type: [T].self, decoder: JSONDecoder())
+                .decode(type: type, decoder: JSONDecoder())
                 .receive(on: RunLoop.main)
                 .sink(receiveCompletion: { (completion) in
                     if case let .failure(error) = completion {
@@ -42,7 +42,9 @@ class NetworkManager {
                             promise(.failure(NetworkError.unknown))
                         }
                     }
-                }, receiveValue: { promise(.success($0)) })
+                }, receiveValue: { data in
+                    promise(.success(data))
+                })
                 .store(in: &self.cancellables)
         }
     }
