@@ -22,7 +22,7 @@ class NetworkManager {
             }
             
             URLSession.shared.dataTaskPublisher(for: url)
-                .tryMap { (data, response) -> Data in
+                .tryMap { data, response in
                     guard let httpResponse = response as? HTTPURLResponse, 200...299 ~= httpResponse.statusCode else {
                         throw NetworkError.responseError
                     }
